@@ -4,6 +4,7 @@ Reuse alloations when mapping the elements of a `Vec`, `Box<[T]>` or `Box<T>`
 if possible.
 
 To map in place the types must have identical alignment and:
+
 * for boxes and boxed slices the sizes must be equal,
 * for vectors the size of *in* must be a multiple of the *out* type.
   (so *out* cannot be bigger than *in*)
