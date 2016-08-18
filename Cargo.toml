@@ -1,0 +1,20 @@
+lib = {path = "lib.rs"}
+test = [{name = "tests", path = "tests.rs"}]
+
+[package]
+name = "map_in_place"
+description = """
+Reuse the memory of a Vec<T>, Box<[T]> or Box<T>
+when mapping the elements if possible.
+"""
+keywords = ["map", "filter_map", "vec"]
+license = "Apache-2.0 / MIT"
+version = "0.1.0"
+
+documentation = "https://tormol.github.io/rustdoc/map_in_place/"
+repository = "https://github.com/tormol/map_in_place"
+readme = "README.md"
+authors = ["Torbjørn Birch Moltu <t.b.moltu@lyse.net>"]
+
+[dependencies]
+scopeguard = "0.2"
