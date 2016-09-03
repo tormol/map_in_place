@@ -36,9 +36,9 @@ fn vec_filter_fallback() {
 fn vec_fallback() {assert_eq!(&nv(1u8).map(|e| e as u16 ), &[1,1,1,1]);}
 #[test]#[should_panic(expected="`A` and `B` have different alignment")]
 fn vec_alignment() {let _ = nv((1u8,2u8)).map_in_place(|(a,b)| ((a as u16)<<8) | b as u16 );}
-#[test]#[should_panic(expected="The size of `A` is not a multiple of `B`")]
+#[test]#[should_panic(expected="The size of `A` is not equal to or a multiple of the size of `B`")]
 fn vec_bigger() {let _ = nv(1u8).map_in_place(|e| [e,e] );}
-#[test]#[should_panic(expected="The size of `A` is not a multiple of `B`")]
+#[test]#[should_panic(expected="The size of `A` is not equal to or a multiple of the size of `B`")]
 fn vec_smaller() {let _ = nv([1u8;3]).map_in_place(|a| [a[0],a[1]] );}
 
 fn ns<T:Copy>(fill:T)->Box<[T]> {nv(fill).into_boxed_slice()}

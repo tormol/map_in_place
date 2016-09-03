@@ -32,10 +32,20 @@ fn main() {
 */
 
 
-
 extern crate scopeguard;
 use scopeguard::guard;
 use std::{mem, ptr};
+
+
+// Error messages used by {map,retain}_in_place().
+static ERR_ZERO_SIZED: &'static str
+     = "The optimization doesn't make sense fore zero-sized types";
+static ERR_ALIGNMENT: &'static str = "`A` and `B` have different alignment";
+static ERR_NEED_EXACT_SIZE: &'static str = "`A` and `B` have different sizes";
+static ERR_NEED_DIVISIBLE_SIZE: &'static str
+     = "The size of `A` is not equal to or a multiple of the size of `B`";
+
+
 
 fn handle_panic_of<R, F:FnOnce()->R, D:FnMut()>
 (might_panic: F,  mut cleanup: D) -> R {
@@ -65,10 +75,10 @@ macro_rules! sizes {($a:ty, $b:ty, $zero:expr, $alignment:expr,
 }}
 macro_rules! panicy {($a:ty, $b:ty, $rel:expr=>$ok:expr, $notrel:expr) => {
     sizes!{$a,$b,
-        panic!("The optimization doesn't make sense fore zero-sized types"),
-        panic!("`A` and `B` have different alignment"),
+        panic!("{}", ERR_ZERO_SIZED),
+        panic!("{}", ERR_ALIGNMENT),
         $rel => $ok,
-        panic!($notrel),
+        panic!("{}", $notrel),
     }
 }}
 macro_rules! fallback {($a:ty, $b:ty, $rel:expr=>$ok:expr, $fallback:expr) => {
@@ -133,7 +143,7 @@ impl<A> MapVecInPlace<A> for Vec<A> {
     fn map_in_place<B,F:FnMut(A)->B>(self, f: F) -> Vec<B> {
         panicy!{A,B,
             |a,b| a%b==0 => map_vec(self, f),
-            "The size of `A` is not a multiple of `B`"
+            ERR_NEED_DIVISIBLE_SIZE
         }
     }
     #[inline]
@@ -147,7 +157,7 @@ impl<A> MapVecInPlace<A> for Vec<A> {
     fn filter_map_in_place<B,F:FnMut(A)->Option<B>>(self, f: F) -> Vec<B> {
         panicy!{A,B,
             |a,b| a%b==0 => filter_map_vec(self, f),
-            "The size of `A` is not a multiple of `B`"
+            ERR_NEED_DIVISIBLE_SIZE
         }
     }
 }
@@ -174,7 +184,7 @@ impl<A> MapSliceInPlace<A> for Box<[A]> {
     fn map_in_place<B,F:FnMut(A)->B>(self, f: F) -> Box<[B]> {
         panicy!{A,B,
             |a,b| a==b => map_slice(self, f),
-            "`A` and `B` have different size"
+            ERR_NEED_EXACT_SIZE
         }
     }
 }
@@ -209,7 +219,7 @@ impl<A> MapBoxInPlace<A> for Box<A> {
     fn map_in_place<B,M:FnOnce(A)->B>(self, f: M) -> Box<B> {
         panicy!{A,B,
             |a,b| a==b => map_box(self, f),
-            "`A` and `B` have different size"
+            ERR_NEED_EXACT_SIZE
         }
     }
 }
