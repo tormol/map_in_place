@@ -47,6 +47,30 @@ static ERR_NEED_DIVISIBLE_SIZE: &'static str
 
 
 
+pub trait MapBoxInPlace<A> {
+    fn map<B,F:FnOnce(A)->B>(self, f: F) -> Box<B>;
+    fn map_in_place<B,F:FnOnce(A)->B>(self, f: F) -> Box<B>;
+}
+
+pub trait MapSliceInPlace<A> {
+    fn map<B,F:FnMut(A)->B>(self, f: F) -> Box<[B]>;
+    fn map_in_place<B,F:FnMut(A)->B>(self, f: F) -> Box<[B]>;
+}
+
+pub trait MapVecInPlace<A> {
+    fn map<B,F:FnMut(A)->B>(self, f: F) -> Vec<B>;
+    fn map_in_place<B,F:FnMut(A)->B>(self, f: F) -> Vec<B>;
+
+    // Vec uses retain and not filter,
+    // but retain_map reads like keep, then replace, which doesn't make sense.
+    fn filter_map<B,F:FnMut(A)->Option<B>>(self, f: F) -> Vec<B>;
+    fn filter_map_in_place<B,F:FnMut(A)->Option<B>>(self, f: F) -> Vec<B>;
+}
+
+// VecDeque lacks a from_raw_parts and a way to get/set start and end index.
+
+
+
 fn handle_panic_of<R, F:FnOnce()->R, D:FnMut()>
 (might_panic: F,  mut cleanup: D) -> R {
     let guard = guard((), |_| cleanup() );
@@ -92,10 +116,6 @@ macro_rules! fallback {($a:ty, $b:ty, $rel:expr=>$ok:expr, $fallback:expr) => {
 
 
 
-// VecDeque lacks a from_raw_parts and a way to get/set start and end index.
-
-
-
 unsafe fn filter_map_vec<A, B, F:FnMut(A)->Option<B>>
 (mut vec: Vec<A>,  mut f: F) -> Vec<B> {
     let len = vec.len();
@@ -122,14 +142,6 @@ unsafe fn filter_map_vec<A, B, F:FnMut(A)->Option<B>>
 unsafe fn map_vec<A, B, F:FnMut(A)->B>
 (vec: Vec<A>,  mut f: F) -> Vec<B> {
     filter_map_vec(vec, |a| Some(f(a)) )
-}
-pub trait MapVecInPlace<A> {
-    fn map<B,F:FnMut(A)->B>(self, f: F) -> Vec<B>;
-    fn map_in_place<B,F:FnMut(A)->B>(self, f: F) -> Vec<B>;
-    // Vec uses retain and not filter,
-    // but retain_map reads like keep, then replace, which doesn't make sense.
-    fn filter_map<B,F:FnMut(A)->Option<B>>(self, f: F) -> Vec<B>;
-    fn filter_map_in_place<B,F:FnMut(A)->Option<B>>(self, f: F) -> Vec<B>;
 }
 impl<A> MapVecInPlace<A> for Vec<A> {
     #[inline]
@@ -168,10 +180,6 @@ unsafe fn map_slice<A, B, F:FnMut(A)->B>
 (boxed: Box<[A]>, f: F) -> Box<[B]> {
     map_vec(boxed.into_vec(), f).into_boxed_slice()
 }
-pub trait MapSliceInPlace<A> {
-    fn map<B,F:FnMut(A)->B>(self, f: F) -> Box<[B]>;
-    fn map_in_place<B,F:FnMut(A)->B>(self, f: F) -> Box<[B]>;
-}
 impl<A> MapSliceInPlace<A> for Box<[A]> {
     #[inline]
     fn map<B,F:FnMut(A)->B>(self, f: F) -> Box<[B]> {
@@ -202,10 +210,6 @@ unsafe fn map_box<A, B, F:FnOnce(A)->B>
     let bptr = aptr as *mut B;
     ptr::write(bptr, b);
     Box::from_raw(bptr)
-}
-pub trait MapBoxInPlace<A> {
-    fn map<B,F:FnOnce(A)->B>(self, f: F) -> Box<B>;
-    fn map_in_place<B,F:FnOnce(A)->B>(self, f: F) -> Box<B>;
 }
 impl<A> MapBoxInPlace<A> for Box<A> {
     #[inline]
