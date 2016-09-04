@@ -48,22 +48,71 @@ static ERR_NEED_DIVISIBLE_SIZE: &'static str
 
 
 pub trait MapBoxInPlace<A> {
+    /// Replace the value with one that might have a different type.
+    ///
+    /// If the types have identical size and alignment
+    /// the heap allocation will be reused.
     fn map<B,F:FnOnce(A)->B>(self, f: F) -> Box<B>;
+
+    /// Replace the value in the box with one that might be of another type
+    /// as long the new type has identical size and alignment with the old one.
+    ///
+    /// # Panics:
+    /// If the new type doesn't have the same size and alignment.
     fn map_in_place<B,F:FnOnce(A)->B>(self, f: F) -> Box<B>;
 }
 
 pub trait MapSliceInPlace<A> {
+    /// Map the elements as in an iterator, but reuse the allocation if
+    /// the types have identical size and alignment.
     fn map<B,F:FnMut(A)->B>(self, f: F) -> Box<[B]>;
+
+    /// Map the elements as in an iterator, but reuse the allocation.
+    ///
+    /// # Panics:
+    /// If the old and new types doesn't have identical size and alignment.
     fn map_in_place<B,F:FnMut(A)->B>(self, f: F) -> Box<[B]>;
 }
 
 pub trait MapVecInPlace<A> {
+    /// Shorter than `.into_iter().map(f).collect::<Vec<_>>()`,
+    /// and faster if the types have identical alignment and the size of `A` is
+    /// divisible by the size of `B`: Then the allocation is reused.
+    ///
+    /// This function doesn't attempt to optimize cases
+    /// where the size of `A` is a multiple of the size of `B`:
+    /// I think `capacity` is rarely twice or more `size`, nevermind 3x or 4x.
     fn map<B,F:FnMut(A)->B>(self, f: F) -> Vec<B>;
+
+    /// Reuse the memory owned by `self` when converting the elements
+    /// to a different type.
+    /// For this to be safe the types must have identical alignment and
+    /// the size of `A` must be divisible by the size of `B`
+    /// (`size_of::<A>() % size_of::<B>() == 0`).
+    ///
+    /// # Panics:
+    /// If the conditions above are not met.
     fn map_in_place<B,F:FnMut(A)->B>(self, f: F) -> Vec<B>;
 
     // Vec uses retain and not filter,
     // but retain_map reads like keep, then replace, which doesn't make sense.
+
+    /// Shorter than `.into_iter().filter_map(f).collect::<Vec<_>>()`,
+    /// and faster if the types have identical alignment and the size of `A` is
+    /// divisible by the size of `B`: Then the allocation is reused.
+    ///
+    /// This function doesn't (yet) attempt to optimize cases
+    /// where the size of `A` is a multiple of the size of `B`.
     fn filter_map<B,F:FnMut(A)->Option<B>>(self, f: F) -> Vec<B>;
+
+    /// Reuse the memory owned by `self` when filtering and converting
+    /// the elements to a different type.
+    /// For this to be safe the types must have identical alignment and
+    /// the size of `A` must be divisible by the size of `B`
+    /// (`size_of::<A>() % size_of::<B>() == 0).
+    ///
+    /// # Panics:
+    /// If the conditions above are not met.
     fn filter_map_in_place<B,F:FnMut(A)->Option<B>>(self, f: F) -> Vec<B>;
 }
 
