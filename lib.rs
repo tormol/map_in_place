@@ -114,7 +114,7 @@ pub trait MapVecInPlace<A> {
 
 
 
-fn handle_panic_of<R, F:FnOnce()->R, D:FnMut()>
+fn handle_unwind_of<R, F:FnOnce()->R, D:FnMut()>
 (might_panic: F,  mut cleanup: D) -> R {
     let guard = guard((), |_| cleanup() );
     let r = might_panic();
@@ -169,7 +169,7 @@ unsafe fn filter_map_vec<A, B, F:FnMut(A)->Option<B>>
     let mut wrote = 0;
     for i in 0..len {
         let a = ptr::read(read.offset(i as isize));
-        let result = handle_panic_of(|| f(a), || {
+        let result = handle_unwind_of(|| f(a), || {
             for ii in i+1..len {
                 ptr::drop_in_place(read.offset(ii as isize));
             }
@@ -246,7 +246,7 @@ unsafe fn map_box<A, B, F:FnOnce(A)->B>
 (boxed: Box<A>, f: F) -> Box<B> {
     let aptr = Box::into_raw(boxed);
     let a = ptr::read(aptr);
-    let b = handle_panic_of(|| f(a), || {
+    let b = handle_unwind_of(|| f(a), || {
         // Currently OK.
         mem::drop(Vec::from_raw_parts(aptr, 0, 1));
     });
