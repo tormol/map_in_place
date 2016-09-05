@@ -54,6 +54,8 @@ fn vec_fallback() {
     assert_eq!(&v, &[1,1,1,1]);
     assert!(v.as_ptr() as usize != p);
 }
+#[test] #[should_panic(expected="Cannot reuse memory for zero-sized types")]
+fn vec_zst() {let _ = nv(()).0.map_in_place(|()| () );}
 #[test] #[should_panic(expected="`A` and `B` have different alignment")]
 fn vec_alignment() {let _ = nv((1u8,2u8)).0.map_in_place(|(a,b)| ((a as u16)<<8) | b as u16 );}
 #[test] #[should_panic(expected="The size of `A` is not equal to or a multiple of the size of `B`")]
@@ -81,6 +83,8 @@ fn slice_fallback() {
     assert_eq!(&bs[..], &[1,1,1,1]);
     assert!(bs.as_ptr() as usize != p);
 }
+#[test] #[should_panic(expected="Cannot reuse memory for zero-sized types")]
+fn slice_zst() {let _ = ns(()).0.map_in_place(|()| () );}
 #[test] #[should_panic(expected="`A` and `B` have different alignment")]
 fn slice_alignment() {let _ = ns((1u8,2u8)).0.map_in_place(|(a,b)| ((a as u16)<<8) | b as u16 );}
 #[test] #[should_panic(expected="`A` and `B` have different size")]
@@ -105,6 +109,8 @@ fn box1_fallback() {
     assert_eq!(*b, '\0');
     assert!(b.as_ref() as *const _ as usize != p);
 }
+#[test] #[should_panic(expected="Cannot reuse memory for zero-sized types")]
+fn box1_zst() {let _ = Box::new(()).map_in_place(|()| () );}
 #[test] #[should_panic(expected="`A` and `B` have different alignment")]
 fn box1_alignment() {let _: Box<u32> = Box::new([1_u8; 4]).map_in_place(|_| 20 );}
 #[test] #[should_panic(expected="`A` and `B` have different size")]

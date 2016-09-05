@@ -7,6 +7,7 @@ while the others will fall back to iterating and collecting.
 
 I might add methods to the traits without a default impl or a major version bump;
 implement them for other types at your own risk.
+I might also change the panic messages.
 
 # Examples:
 
@@ -32,8 +33,7 @@ use std::{mem, ptr};
 
 
 // Error messages used by {map,retain}_in_place().
-static ERR_ZERO_SIZED: &'static str
-     = "The optimization doesn't make sense fore zero-sized types";
+static ERR_ZERO_SIZED: &'static str = "Cannot reuse memory for zero-sized types";
 static ERR_ALIGNMENT: &'static str = "`A` and `B` have different alignment";
 static ERR_NEED_EXACT_SIZE: &'static str = "`A` and `B` have different sizes";
 static ERR_NEED_DIVISIBLE_SIZE: &'static str
