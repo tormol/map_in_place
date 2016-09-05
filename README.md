@@ -1,15 +1,13 @@
 # map_in_place
 
-Reuse alloations when mapping the elements of a `Vec`, `Box<[T]>` or `Box<T>`
-if possible.
+Reuse allocations when converting the elements of a vector, boxed slice or box
+to a compatible type.
 
-To map in place the types must have identical alignment and:
+To map in place the types must have identical alignment and size.
+For vectors the size of *in* can also be a multiple of the size of *out*
+because it can change the capacity. (but *out* can never be bigger than *in*).
 
-* for boxes and boxed slices the sizes must be equal,
-* for vectors the size of *in* must be a multiple of the *out* type.
-  (so *out* cannot be bigger than *in*)
-
-The `..._in_place()` methods will panic if not possible,
+The `*_in_place()` methods will panic if the types are not compatible,
 while the others will fall back to iterating and collecting.
 
 ## Example
@@ -32,9 +30,12 @@ fn main() {
 The rust allocation interface is a bit more complex than the standard C one of
 `malloc(size_t)` and `free(void*)`:
 
-First, malloc and free takes the alignment of the types you want to store, and allocating with one alignment and freeing with another is undefined behaviour.
+First, malloc and free takes the alignment of the types you want to store,
+and allocating with one alignment and freeing with another is undefined behaviour.
 
-Second, rust requires the owner to know the size of the memory to free, which means one of the types' size must be a multiple of the other, since the capacity is an integer.  
+Second, Rust requires the owner to know the size of the memory to free,
+which means one of the types' size must be a multiple of the other,
+since the capacity is an integer.
 
 ## License
 

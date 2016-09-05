@@ -5,7 +5,7 @@ test = [{name = "tests", path = "tests.rs"}]
 name = "map_in_place"
 description = """
 Reuse the memory of a Vec<T>, Box<[T]> or Box<T>
-when mapping the elements if possible.
+when mapping the elements to a compatible type.
 """
 keywords = ["map", "filter_map", "vec"]
 license = "Apache-2.0 / MIT"

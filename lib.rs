@@ -1,14 +1,8 @@
 /*!
-Reuse alloations when mapping the elements of a `Vec`, `Box<[T]>` or `Box<T>`
-if possible.
+Reuse allocations when converting the elements of a vector, boxed slice or box
+to a compatible type.
 
-To map in place the types must have identical alignment and:
-
-* for boxes and boxed slices the sizes must be equal,
-* for vectors the size of *in* must be a multiple of the *out* type.
-  so *out* cannot be bigger than *in*)
-
-The `..._in_place()` methods will panic if not possible,
+The `*_in_place()` methods will panic if the types are not compatible,
 while the others will fall back to iterating and collecting.
 
 I might add methods to the traits without a default impl or a major version bump;
