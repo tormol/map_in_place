@@ -46,10 +46,17 @@ pub trait MapBoxInPlace<A> {
     ///
     /// If the types have identical size and alignment
     /// the heap allocation will be reused.
+    /// If the closure then unwinds, the owned memory (but not the value,
+    /// which the closure consumed) is leaked.
+    /// This might change in the future.
     fn map<B,F:FnOnce(A)->B>(self, f: F) -> Box<B>;
 
     /// Replace the value in the box with one that might be of another type
     /// as long the new type has identical size and alignment with the old one.
+    ///
+    /// If the closure unwinds, the owned memory (but not the value,
+    /// which the closure consumed) is leaked.
+    /// This might change in the future.
     ///
     /// # Panics:
     /// If the new type doesn't have the same size and alignment.
@@ -246,10 +253,7 @@ unsafe fn map_box<A, B, F:FnOnce(A)->B>
 (boxed: Box<A>, f: F) -> Box<B> {
     let aptr = Box::into_raw(boxed);
     let a = ptr::read(aptr);
-    let b = handle_unwind_of(|| f(a), || {
-        // Currently OK.
-        mem::drop(Vec::from_raw_parts(aptr, 0, 1));
-    });
+    let b = f(a);// If it unwinds, the memory is leaked.
     let bptr = aptr as *mut B;
     ptr::write(bptr, b);
     Box::from_raw(bptr)
