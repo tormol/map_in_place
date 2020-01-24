@@ -12,7 +12,7 @@ while the others will fall back to iterating and collecting.
 
 ## Example
 
-```
+```rust
 extern crate map_in_place;
 use map_in_place::MapVecInPlace;
 fn main() {
@@ -26,11 +26,11 @@ fn main() {
 }
 ```
 
-## Why all those restrictions?  
-The rust allocation interface is a bit more complex than the standard C one of
+## Why all those restrictions?
+The Rust allocation interface is a bit more complex than the standard C one of
 `malloc(size_t)` and `free(void*)`:
 
-First, malloc and free takes the alignment of the types you want to store,
+First, `alloc()` and `dealloc()` takes the alignment of the types you want to store,
 and allocating with one alignment and freeing with another is undefined behaviour.
 
 Second, Rust requires the owner to know the size of the memory to free,

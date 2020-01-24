@@ -14,15 +14,14 @@ I might also change the panic messages.
 ```
 extern crate map_in_place;
 use map_in_place::MapVecInPlace;
-fn main() {
-    let v = vec![8_u32,29,14,5];
-    let v = v.filter_map(|n| if n < 10 {Some( (n as u8+b'0') as char)}
-                             else      {None}
-                        );// happens in place
-    assert_eq!(&v, &['8','5']);
-    let v = v.map(|c| c as u8);// falls back to iterators
-    assert_eq!(&v[..], &b"85"[..]);
-}
+
+let v = vec![8_u32,29,14,5];
+let v = v.filter_map(|n| if n < 10 {Some( (n as u8+b'0') as char)}
+                         else      {None}
+                    );// happens in place
+assert_eq!(&v, &['8','5']);
+let v = v.map(|c| c as u8);// falls back to iterators
+assert_eq!(&v[..], &b"85"[..]);
 ```
 */
 
@@ -33,10 +32,10 @@ use std::{mem, ptr};
 
 
 // Error messages used by {map,retain}_in_place().
-static ERR_ZERO_SIZED: &'static str = "Cannot reuse memory for zero-sized types";
-static ERR_ALIGNMENT: &'static str = "`A` and `B` have different alignment";
-static ERR_NEED_EXACT_SIZE: &'static str = "`A` and `B` have different sizes";
-static ERR_NEED_DIVISIBLE_SIZE: &'static str
+static ERR_ZERO_SIZED: &str = "Cannot reuse memory for zero-sized types";
+static ERR_ALIGNMENT: &str = "`A` and `B` have different alignment";
+static ERR_NEED_EXACT_SIZE: &str = "`A` and `B` have different sizes";
+static ERR_NEED_DIVISIBLE_SIZE: &str
      = "The size of `A` is not equal to or a multiple of the size of `B`";
 
 
